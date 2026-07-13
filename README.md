@@ -100,7 +100,11 @@ com.example.UserRepositoryTest.testSave
 
 ## Limitations (v0.1)
 
-- Single-module projects only
+- Module discovery is convention-based: it parses `settings.gradle(.kts)` includes,
+  standard `src/{main,test}/{kotlin,java}` layouts, and `project(":x")` /
+  type-safe accessor dependencies from build files. Dynamic includes, custom
+  source sets (Android variants, KMP), and dependencies injected by convention
+  plugins are not detected — see [#1](https://github.com/MikhailHal/ariadne/issues/1)
 - Full graph rebuild on each request (no caching yet)
 
 ## License

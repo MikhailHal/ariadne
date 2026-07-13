@@ -134,20 +134,13 @@ private fun getGitDiff(projectDir: File, baseBranch: String): String {
 
 private fun findAffectedTests(projectPath: String, diff: String): Set<String> {
     val path = Path.of(projectPath)
-
-    // シンプルなシングルモジュール構成を仮定
-    val moduleSourceRoots = mapOf(
-        ":" to listOf(
-            path.resolve("src/main/kotlin"),
-            path.resolve("src/test/kotlin")
-        )
-    )
-    val modulePathMapping = mapOf(":" to ".")
+    val scan = GradleProjectScanner.scan(path)
 
     return Sazanami.findAffectedTests(
         diff = diff,
-        moduleSourceRoots = moduleSourceRoots,
-        modulePathMapping = modulePathMapping,
-        projectRoot = path
+        moduleSourceRoots = scan.moduleSourceRoots,
+        modulePathMapping = scan.modulePathMapping,
+        projectRoot = path,
+        moduleDependencies = scan.moduleDependencies
     )
 }
