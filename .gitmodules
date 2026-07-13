@@ -1,0 +1,3 @@
+[submodule "sazanami"]
+	path = sazanami
+	url = https://github.com/MikhailHal/sazanami.git
