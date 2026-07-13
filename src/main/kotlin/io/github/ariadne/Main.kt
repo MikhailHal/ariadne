@@ -9,6 +9,7 @@ import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
+import kotlinx.coroutines.CompletableDeferred
 import kotlinx.coroutines.runBlocking
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
@@ -23,6 +24,11 @@ import java.nio.file.Path
 private const val DEFAULT_BASE_BRANCH = "origin/main"
 
 fun main(): Unit = runBlocking {
+    // stdout は JSON-RPC 専用チャンネルなので退避し、
+    // ライブラリの標準出力への書き込み (kotlin-logging の診断メッセージ等) は stderr に流す
+    val protocolOutput = System.out
+    System.setOut(System.err)
+
     val server = Server(
         serverInfo = Implementation(name = "ariadne", version = "0.1.0"),
         options = ServerOptions(
@@ -95,9 +101,14 @@ fun main(): Unit = runBlocking {
 
     val transport = StdioServerTransport(
         input = System.`in`.asSource().buffered(),
-        output = System.out.asSink().buffered()
+        output = protocolOutput.asSink().buffered()
     )
-    server.createSession(transport)
+    val session = server.createSession(transport)
+
+    // createSession はブロックしないため、セッションが閉じるまで main を待機させる
+    val done = CompletableDeferred<Unit>()
+    session.onClose { done.complete(Unit) }
+    done.await()
 }
 
 private fun resolveBaseBranch(): String = DEFAULT_BASE_BRANCH
