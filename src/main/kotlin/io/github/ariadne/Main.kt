@@ -8,7 +8,11 @@ import io.modelcontextprotocol.kotlin.sdk.types.CallToolResult
 import io.modelcontextprotocol.kotlin.sdk.types.Implementation
 import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
+import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.coroutines.runBlocking
+import kotlinx.serialization.json.buildJsonObject
+import kotlinx.serialization.json.put
+import kotlinx.serialization.json.putJsonObject
 import kotlinx.io.asSink
 import kotlinx.io.asSource
 import kotlinx.io.buffered
@@ -33,7 +37,20 @@ fun main(): Unit = runBlocking {
                 Get tests affected by code changes.
                 Automatically runs git diff and analyzes which tests need to be run.
                 Returns a list of test FQNs (fully qualified names).
-            """.trimIndent()
+            """.trimIndent(),
+            inputSchema = ToolSchema(
+                properties = buildJsonObject {
+                    putJsonObject("project_path") {
+                        put("type", "string")
+                        put("description", "Absolute path to the Kotlin project root directory")
+                    }
+                    putJsonObject("base_branch") {
+                        put("type", "string")
+                        put("description", "Git branch to compare against (default: origin/main)")
+                    }
+                },
+                required = listOf("project_path")
+            )
         ) { request ->
             val projectPath = request.params.arguments?.get("project_path")?.jsonPrimitive?.content
                 ?: return@addTool CallToolResult(
