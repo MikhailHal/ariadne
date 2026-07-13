@@ -90,7 +90,7 @@ private fun resolveBaseBranch(): String = DEFAULT_BASE_BRANCH
  */
 private fun getGitDiff(projectDir: File, baseBranch: String): String {
     return try {
-        val process = ProcessBuilder("git", "diff", "--unified=0", "$baseBranch...HEAD")
+        val process = ProcessBuilder("git", "diff", "--unified=0", baseBranch)
             .directory(projectDir)
             .redirectErrorStream(true)
             .start()
