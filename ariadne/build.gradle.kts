@@ -1,18 +1,29 @@
 plugins {
-    id("java")
+    kotlin("jvm") version "2.1.20"
+    application
 }
 
-group = "io.github.mikhailhal"
-version = "1.0-SNAPSHOT"
+group = "io.github.ariadne"
+version = "0.1.0-SNAPSHOT"
+
+kotlin {
+    jvmToolchain(21)
+}
 
 repositories {
     mavenCentral()
+    maven("https://redirector.kotlinlang.org/maven/intellij-dependencies")
 }
 
 dependencies {
-    testImplementation(platform("org.junit:junit-bom:5.10.0"))
-    testImplementation("org.junit.jupiter:junit-jupiter")
-    testRuntimeOnly("org.junit.platform:junit-platform-launcher")
+    // sazanami core
+    implementation("io.github.mikhailhal:core")
+
+    testImplementation(kotlin("test"))
+}
+
+application {
+    mainClass.set("io.github.ariadne.MainKt")
 }
 
 tasks.test {
