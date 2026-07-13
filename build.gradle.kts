@@ -20,6 +20,9 @@ dependencies {
     compileOnly("io.github.mikhailhal:core") { isTransitive = false }
     runtimeOnly("io.github.mikhailhal:core")
 
+    // MCP SDK
+    implementation("io.modelcontextprotocol:kotlin-sdk:0.13.0")
+
     testImplementation(kotlin("test"))
 }
 
