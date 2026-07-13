@@ -1,5 +1,5 @@
 plugins {
-    kotlin("jvm") version "2.1.20"
+    kotlin("jvm") version "2.3.0"
     application
 }
 
@@ -16,8 +16,9 @@ repositories {
 }
 
 dependencies {
-    // sazanami core
-    implementation("io.github.mikhailhal:core")
+    // sazanami core - コンパイル時は推移的依存を除外
+    compileOnly("io.github.mikhailhal:core") { isTransitive = false }
+    runtimeOnly("io.github.mikhailhal:core")
 
     testImplementation(kotlin("test"))
 }
