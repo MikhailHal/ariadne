@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" width="1280" height="320">
+  <title>ariadne banner</title>
+  <rect width="1280" height="320" fill="#14100D"/>
+  <g transform="translate(177,162) scale(1.5)">
+    <path d="M 0 0 A 12 12 0 0 0 -24 0 A 21 21 0 0 0 18 0 A 33 33 0 0 0 -48 0 A 54 54 0 0 0 60 0 C 85 0 102 -16 106 -38" fill="none" stroke="#C9703C" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="108" cy="-46" r="5.5" fill="#C9703C"/>
+    <circle cx="108" cy="-46" r="11" fill="none" stroke="#C9703C" stroke-width="1.5" opacity="0.7"/>
+  </g>
+  <text x="470" y="182" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="96" font-weight="500" letter-spacing="4" fill="#C9703C">ariadne</text>
+  <text x="474" y="236" font-family="Helvetica Neue, Helvetica, Arial, sans-serif" font-size="24" font-weight="400" letter-spacing="6" fill="#E09B62">A GUIDING THREAD FOR MCP</text>
+</svg>

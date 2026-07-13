@@ -1,4 +1,8 @@
 <p align="center">
+  <img src="doc/ariadne-banner.svg" alt="ariadne banner" width="100%">
+</p>
+
+<p align="center">
   <h1 align="center">ariadne</h1>
   <p align="center">
     <strong>MCP Server for Affected Test Selection</strong>
@@ -11,7 +15,7 @@
 
 <br>
 
-**ariadne** is an MCP (Model Context Protocol) server that provides AI agents with the ability to identify affected tests. Powered by [sazanami](https://github.com/anthropics/sazanami), it analyzes code changes and returns only the tests that need to be run.
+**ariadne** is an MCP (Model Context Protocol) server that provides AI agents with the ability to identify affected tests. Powered by [sazanami](https://github.com/MikhailHal/sazanami), it analyzes code changes and returns only the tests that need to be run.
 
 ## Features
 
