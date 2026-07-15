@@ -1,10 +1,11 @@
 plugins {
     kotlin("jvm") version "2.3.0"
     application
+    id("com.gradleup.shadow") version "9.2.2"
 }
 
 group = "io.github.ariadne"
-version = "0.1.0-SNAPSHOT"
+version = "0.1.0"
 
 kotlin {
     jvmToolchain(21)
@@ -32,4 +33,11 @@ application {
 
 tasks.test {
     useJUnitPlatform()
+}
+
+tasks.shadowJar {
+    // Analysis API (IntelliJ platform) はサービスローダ登録に依存するため、
+    // META-INF/services をマージしないと standalone セッションが壊れる
+    mergeServiceFiles()
+    archiveClassifier.set("all")
 }

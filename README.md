@@ -17,6 +17,23 @@
 
 **ariadne** is an MCP (Model Context Protocol) server that provides AI agents with the ability to identify affected tests. Powered by [sazanami](https://github.com/MikhailHal/sazanami), it analyzes code changes and returns only the tests that need to be run.
 
+> [!IMPORTANT]
+> ## ⚠️ MUST READ: Speed over Completeness
+>
+> ariadne is built for the agent inner loop — edit, verify, commit — where fast
+> feedback matters more than exhaustive selection. Static analysis cannot trace
+> every execution path: reflection, DI frameworks, and data-flow indirection
+> (e.g., Flux/MVI dispatch) can hide dependencies from **any**
+> affected-test-selection tool, not just ariadne.
+>
+> **Always keep a final line of defense in CI.** Run the full test suite (or a
+> conservative selection) before merging. ariadne narrows what an agent runs
+> while iterating; it is not a replacement for CI.
+>
+> When ariadne detects changes it cannot analyze (build scripts, resources,
+> unscanned source sets), it says so explicitly in the tool response instead of
+> silently reporting "no affected tests".
+
 ## Features
 
 - **MCP Integration** — Works with Claude Code, Claude Desktop, and other MCP-compatible clients
@@ -25,26 +42,40 @@
 
 ## Installation
 
-### Build from Source
+### Homebrew (recommended)
 
 ```bash
-git clone --recursive https://github.com/anthropics/ariadne.git
-cd ariadne
-./gradlew installDist
+brew install mikhailhal/tap/ariadne
 ```
 
-### Configure MCP Client
+Then register it with your MCP client — for Claude Code:
 
-Add to your MCP client configuration (e.g., Claude Desktop):
+```bash
+claude mcp add ariadne -- ariadne
+```
+
+Or add to your MCP client configuration manually (e.g., Claude Desktop):
 
 ```json
 {
   "mcpServers": {
     "ariadne": {
-      "command": "/path/to/ariadne/build/install/ariadne/bin/ariadne"
+      "command": "ariadne"
     }
   }
 }
+```
+
+### Manual (release JAR)
+
+Download `ariadne-<version>-all.jar` from [Releases](https://github.com/MikhailHal/ariadne/releases) (requires JDK 21+) and configure your client with `"command": "java", "args": ["-jar", "/path/to/ariadne-<version>-all.jar"]`.
+
+### Build from Source
+
+```bash
+git clone --recursive https://github.com/MikhailHal/ariadne.git
+cd ariadne
+./gradlew shadowJar   # fat JAR: build/libs/ariadne-<version>-all.jar
 ```
 
 ## Usage
@@ -58,7 +89,11 @@ Once configured, AI agents can use the `get_affected_tests` tool:
 - `base_branch` (optional) — Branch to compare against (default: `origin/main`)
 
 **Returns:**
-- List of affected test FQNs (fully qualified names)
+- List of affected test FQNs (fully qualified names), sorted
+- If the diff contains changes outside the analyzed Kotlin sources (build scripts,
+  resources, unscanned source sets), a note is appended recommending a full test run
+  for those changes
+- Analysis is bounded by a 120s timeout; on timeout an explicit error is returned
 
 ### Example
 
