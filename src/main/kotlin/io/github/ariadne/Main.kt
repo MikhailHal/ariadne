@@ -10,7 +10,11 @@ import io.modelcontextprotocol.kotlin.sdk.types.ServerCapabilities
 import io.modelcontextprotocol.kotlin.sdk.types.TextContent
 import io.modelcontextprotocol.kotlin.sdk.types.ToolSchema
 import kotlinx.coroutines.CompletableDeferred
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.runInterruptible
+import kotlinx.coroutines.withTimeout
 import kotlinx.serialization.json.buildJsonObject
 import kotlinx.serialization.json.put
 import kotlinx.serialization.json.putJsonObject
@@ -23,6 +27,9 @@ import java.nio.file.Path
 import kotlin.system.exitProcess
 
 private const val DEFAULT_BASE_BRANCH = "origin/main"
+
+/** 解析のタイムアウト。超過時はエラーを返し、MCPクライアントを待たせ続けない */
+private const val ANALYSIS_TIMEOUT_MS = 120_000L
 
 fun main(): Unit = runBlocking {
     // stdout は JSON-RPC 専用チャンネルなので退避し、
@@ -42,8 +49,11 @@ fun main(): Unit = runBlocking {
             name = "get_affected_tests",
             description = """
                 Get tests affected by code changes.
-                Automatically runs git diff and analyzes which tests need to be run.
-                Returns a list of test FQNs (fully qualified names).
+                Automatically runs git diff (including uncommitted changes) and analyzes
+                which tests need to be run. Returns a sorted list of test FQNs
+                (fully qualified names). If the diff contains changes outside the analyzed
+                Kotlin sources (build scripts, resources), a note is appended — consider
+                running the full test suite for those changes.
             """.trimIndent(),
             inputSchema = ToolSchema(
                 properties = buildJsonObject {
@@ -76,22 +86,45 @@ fun main(): Unit = runBlocking {
                 }
 
                 val diff = getGitDiff(projectDir, baseBranch)
+                    ?: return@addTool CallToolResult(
+                        content = listOf(TextContent(text = "Error: git diff against '$baseBranch' failed. Check that the ref exists and the directory is a git repository."))
+                    )
                 if (diff.isEmpty()) {
                     return@addTool CallToolResult(
                         content = listOf(TextContent(text = "No changes detected against $baseBranch"))
                     )
                 }
 
-                val affectedTests = findAffectedTests(projectPath, diff)
-                if (affectedTests.isEmpty()) {
-                    CallToolResult(
-                        content = listOf(TextContent(text = "No affected tests detected"))
-                    )
-                } else {
-                    CallToolResult(
-                        content = listOf(TextContent(text = affectedTests.joinToString("\n")))
-                    )
+                val path = Path.of(projectPath)
+                val scan = GradleProjectScanner.scan(path)
+
+                // Analysis API はブロッキング処理のため、タイムアウト時に割り込みで打ち切る
+                val affectedTests = withTimeout(ANALYSIS_TIMEOUT_MS) {
+                    runInterruptible(Dispatchers.IO) { findAffectedTests(path, diff, scan) }
                 }
+
+                val body = if (affectedTests.isEmpty()) {
+                    "No affected tests detected"
+                } else {
+                    affectedTests.sorted().joinToString("\n")
+                }
+
+                // 解析対象外の変更 (ビルドスクリプト・リソース・走査外ソース) を検出した場合、
+                // 「影響なし」が偽の安心にならないよう明示的に伝える
+                val unanalyzed = collectUnanalyzedChanges(diff, path, scan)
+                val text = if (unanalyzed.isEmpty()) {
+                    body
+                } else {
+                    val listed = unanalyzed.take(5).joinToString("\n") { "  - $it" }
+                    val more = if (unanalyzed.size > 5) "\n  ... and ${unanalyzed.size - 5} more" else ""
+                    "$body\n\nNote: ${unanalyzed.size} changed file(s) are outside the analyzed Kotlin sources and were NOT considered:\n$listed$more\nRun the full test suite if these changes can affect behavior."
+                }
+
+                CallToolResult(content = listOf(TextContent(text = text)))
+            } catch (e: TimeoutCancellationException) {
+                CallToolResult(
+                    content = listOf(TextContent(text = "Error: analysis timed out after ${ANALYSIS_TIMEOUT_MS / 1000}s. The project may be too large; consider running the full test suite."))
+                )
             } catch (e: Exception) {
                 CallToolResult(
                     content = listOf(TextContent(text = "Error: ${e.message}"))
@@ -120,8 +153,10 @@ private fun resolveBaseBranch(): String = DEFAULT_BASE_BRANCH
 
 /**
  * git diff を実行して差分を取得
+ *
+ * @return diff文字列。git が失敗した場合 (refが存在しない等) は null
  */
-private fun getGitDiff(projectDir: File, baseBranch: String): String {
+private fun getGitDiff(projectDir: File, baseBranch: String): String? {
     return try {
         val process = ProcessBuilder("git", "diff", "--unified=0", baseBranch)
             .directory(projectDir)
@@ -131,16 +166,13 @@ private fun getGitDiff(projectDir: File, baseBranch: String): String {
         val output = process.inputStream.bufferedReader().readText()
         val exitCode = process.waitFor()
 
-        if (exitCode == 0) output else ""
+        if (exitCode == 0) output else null
     } catch (e: Exception) {
-        ""
+        null
     }
 }
 
-private fun findAffectedTests(projectPath: String, diff: String): Set<String> {
-    val path = Path.of(projectPath)
-    val scan = GradleProjectScanner.scan(path)
-
+private fun findAffectedTests(path: Path, diff: String, scan: GradleProjectScanner.Result): Set<String> {
     return Sazanami.findAffectedTests(
         diff = diff,
         moduleSourceRoots = scan.moduleSourceRoots,
@@ -148,4 +180,29 @@ private fun findAffectedTests(projectPath: String, diff: String): Set<String> {
         projectRoot = path,
         moduleDependencies = scan.moduleDependencies
     )
+}
+
+internal val DIFF_FILE_PATTERN = Regex("""^diff --git a/\S+ b/(\S+)$""", RegexOption.MULTILINE)
+
+/**
+ * diff に含まれる変更のうち、解析対象 (走査済みソースルート配下の .kt) に
+ * 該当しないファイルを列挙する。
+ *
+ * ビルドスクリプトやリソース、走査外ソースセットの変更はテストに影響しうるが
+ * 解析では追跡できないため、結果に注記して偽陰性の静かな見逃しを防ぐ。
+ */
+internal fun collectUnanalyzedChanges(
+    diff: String,
+    projectRoot: Path,
+    scan: GradleProjectScanner.Result
+): List<String> {
+    val roots = scan.moduleSourceRoots.values.flatten().map { it.normalize() }
+    return DIFF_FILE_PATTERN.findAll(diff)
+        .map { it.groupValues[1] }
+        .distinct()
+        .filter { relativePath ->
+            val absolute = projectRoot.resolve(relativePath).normalize()
+            !relativePath.endsWith(".kt") || roots.none { root -> absolute.startsWith(root) }
+        }
+        .toList()
 }
