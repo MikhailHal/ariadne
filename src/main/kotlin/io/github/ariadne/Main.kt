@@ -20,6 +20,7 @@ import kotlinx.io.buffered
 import kotlinx.serialization.json.jsonPrimitive
 import java.io.File
 import java.nio.file.Path
+import kotlin.system.exitProcess
 
 private const val DEFAULT_BASE_BRANCH = "origin/main"
 
@@ -109,6 +110,10 @@ fun main(): Unit = runBlocking {
     val done = CompletableDeferred<Unit>()
     session.onClose { done.complete(Unit) }
     done.await()
+
+    // Analysis API (IntelliJ platform) が非デーモンスレッドを残すため、
+    // main が戻るだけでは JVM が終了しない。明示的にプロセスを落とす
+    exitProcess(0)
 }
 
 private fun resolveBaseBranch(): String = DEFAULT_BASE_BRANCH
