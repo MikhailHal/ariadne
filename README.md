@@ -8,6 +8,8 @@
     <strong>MCP Server for Affected Test Selection</strong>
   </p>
   <p align="center">
+    <a href="https://github.com/MikhailHal/ariadne/releases"><img src="https://img.shields.io/github/v/release/MikhailHal/ariadne?style=flat-square&color=success" alt="Release"></a>
+    <a href="https://github.com/MikhailHal/homebrew-tap"><img src="https://img.shields.io/badge/homebrew-mikhailhal%2Ftap-FBB040.svg?style=flat-square&logo=homebrew&logoColor=white" alt="Homebrew"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
     <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.3.0-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin"></a>
   </p>
@@ -131,6 +133,29 @@ com.example.UserRepositoryTest.testSave
 2. **Run git diff** — ariadne executes `git diff --unified=0` against base branch
 3. **Analyze with sazanami** — Build call graph and find affected tests
 4. **Return results** — List of test FQNs returned to agent
+
+## Real-World Validation: Now in Android
+
+Measured against [Now in Android](https://github.com/android/nowinandroid)
+(Google's reference Android app — 34 modules, ~250 Kotlin files), with sazanami's
+property/constructor-aware call graph (2026-07):
+
+| Metric | Result |
+|---|---|
+| Recall audit — 19 target functions across all layers | **18/18 valid targets detected** (the 19th had no exercising unit test; correctly not selected) |
+| End-to-end response time | **~4s** (module discovery + call-graph build + BFS) |
+| Module discovery | 34 modules via `settings.gradle.kts`, incl. nested modules and type-safe accessor dependencies |
+
+Verified patterns include repositories behind project interfaces, a library-interface
+override (`androidx.datastore.Serializer`), `operator fun invoke` use cases,
+`@Composable` functions, extension mappers, and ViewModel property-initializer
+chains — e.g., changing a single `core:common` function (`asResult()`) correctly
+selects 14 tests across three modules, including ViewModel tests reachable only
+through `val uiState = ...stateIn(...)` properties.
+
+Known gap: callable references (`::fn`) do not yet produce call-graph edges
+([sazanami#37](https://github.com/MikhailHal/sazanami/issues/37)). Full audit
+notes: [sazanami#29](https://github.com/MikhailHal/sazanami/issues/29).
 
 ## Requirements
 
