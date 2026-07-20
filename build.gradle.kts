@@ -11,6 +11,31 @@ kotlin {
     jvmToolchain(21)
 }
 
+// MCPクライアントへ通知するバージョンをビルド定義と一致させる
+val generateBuildInfo by tasks.registering {
+    val outputDir = layout.buildDirectory.dir("generated/buildInfo")
+    val versionValue = project.version.toString()
+    inputs.property("version", versionValue)
+    outputs.dir(outputDir)
+    doLast {
+        val file = outputDir.get().file("io/github/ariadne/BuildInfo.kt").asFile
+        file.parentFile.mkdirs()
+        file.writeText(
+            """
+            package io.github.ariadne
+
+            internal object BuildInfo {
+                const val VERSION: String = "$versionValue"
+            }
+            """.trimIndent() + "\n"
+        )
+    }
+}
+
+sourceSets.main {
+    kotlin.srcDir(generateBuildInfo)
+}
+
 repositories {
     mavenCentral()
     maven("https://redirector.kotlinlang.org/maven/intellij-dependencies")

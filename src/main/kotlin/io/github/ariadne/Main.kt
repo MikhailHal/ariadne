@@ -38,7 +38,7 @@ fun main(): Unit = runBlocking {
     System.setOut(System.err)
 
     val server = Server(
-        serverInfo = Implementation(name = "ariadne", version = "0.1.0"),
+        serverInfo = Implementation(name = "ariadne", version = BuildInfo.VERSION),
         options = ServerOptions(
             capabilities = ServerCapabilities(
                 tools = ServerCapabilities.Tools(listChanged = true)
