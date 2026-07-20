@@ -137,7 +137,7 @@ com.example.UserRepositoryTest.testSave
 ## Real-World Validation: Now in Android
 
 Measured against [Now in Android](https://github.com/android/nowinandroid)
-(Google's reference Android app — 34 modules, ~268 Kotlin files) with ariadne 0.2.0
+(Google's reference Android app — 34 modules, ~268 Kotlin files) with ariadne 0.3.0
 (2026-07):
 
 | Metric | Result |
@@ -198,7 +198,7 @@ Full audit notes: [sazanami#29](https://github.com/MikhailHal/sazanami/issues/29
 - **JDK 21** or later
 - **Git** — For diff detection
 
-## Limitations (v0.2)
+## Limitations (v0.3)
 
 - Module discovery is convention-based: it parses `settings.gradle(.kts)` includes,
   enumerates `src/<sourceSet>/{kotlin,java}` layouts, and reads `project(":x")` /
