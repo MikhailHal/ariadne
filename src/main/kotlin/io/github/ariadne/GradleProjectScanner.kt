@@ -3,6 +3,8 @@ package io.github.ariadne
 import java.nio.file.Path
 import kotlin.io.path.exists
 import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
+import kotlin.io.path.name
 import kotlin.io.path.readText
 
 /**
@@ -24,12 +26,8 @@ object GradleProjectScanner {
         val moduleDependencies: Map<String, Set<String>>
     )
 
-    private val SOURCE_ROOT_CANDIDATES = listOf(
-        "src/main/kotlin",
-        "src/test/kotlin",
-        "src/main/java",
-        "src/test/java"
-    )
+    /** instrumented test (androidTest*) はユニットテスト選択の対象外 */
+    private const val EXCLUDED_SOURCE_SET_PREFIX = "androidTest"
 
     // includeBuild にはマッチしないよう \b で区切る
     private val INCLUDE_STATEMENT = Regex("""\binclude\b[^\n]*""")
@@ -98,10 +96,24 @@ object GradleProjectScanner {
             .toList()
     }
 
-    private fun findSourceRoots(moduleDir: Path): List<Path> =
-        SOURCE_ROOT_CANDIDATES
-            .map { moduleDir.resolve(it) }
+    /**
+     * モジュールの src/<sourceSet>/{kotlin,java} を列挙する
+     *
+     * ソースセット名を固定リストにせずディレクトリ走査にすることで、
+     * Android の variant/flavor ソースセット (src/debug/kotlin, src/demo/java,
+     * src/testDebug/kotlin など) も名前を知らずに候補にできる。
+     * androidTest* (instrumented test) はユニットテスト選択の対象外として除外する。
+     */
+    private fun findSourceRoots(moduleDir: Path): List<Path> {
+        val srcDir = moduleDir.resolve("src")
+        if (!srcDir.isDirectory()) return emptyList()
+
+        return srcDir.listDirectoryEntries()
+            .filter { it.isDirectory() && !it.name.startsWith(EXCLUDED_SOURCE_SET_PREFIX) }
+            .sortedBy { it.name }
+            .flatMap { sourceSet -> listOf(sourceSet.resolve("kotlin"), sourceSet.resolve("java")) }
             .filter { it.isDirectory() }
+    }
 
     private fun parseDependencies(projectRoot: Path, moduleNames: Set<String>): Map<String, Set<String>> {
         // 型安全アクセサの逆引き表: ":core-api" → "core.api" ではなく "coreApi"

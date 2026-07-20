@@ -85,6 +85,42 @@ class GradleProjectScannerTest {
     }
 
     @Test
+    fun `android variant source sets are discovered`() {
+        file("settings.gradle.kts", """include(":app")""")
+        dir("app/src/main/kotlin")
+        dir("app/src/debug/kotlin")
+        dir("app/src/demo/java")
+        dir("app/src/testDebug/kotlin")
+
+        val result = GradleProjectScanner.scan(root)
+
+        assertEquals(
+            listOf(
+                root.resolve("app/src/debug/kotlin"),
+                root.resolve("app/src/demo/java"),
+                root.resolve("app/src/main/kotlin"),
+                root.resolve("app/src/testDebug/kotlin")
+            ),
+            result.moduleSourceRoots[":app"]
+        )
+    }
+
+    @Test
+    fun `instrumented test source sets are excluded`() {
+        file("settings.gradle.kts", """include(":app")""")
+        dir("app/src/main/kotlin")
+        dir("app/src/androidTest/kotlin")
+        dir("app/src/androidTestDebug/kotlin")
+
+        val result = GradleProjectScanner.scan(root)
+
+        assertEquals(
+            listOf(root.resolve("app/src/main/kotlin")),
+            result.moduleSourceRoots[":app"]
+        )
+    }
+
+    @Test
     fun `modules without source roots are dropped`() {
         file("settings.gradle.kts", """include(":core", ":docs")""")
         dir("core/src/main/kotlin")
