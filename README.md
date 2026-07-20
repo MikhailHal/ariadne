@@ -198,7 +198,7 @@ Full audit notes: [sazanami#29](https://github.com/MikhailHal/sazanami/issues/29
 - **JDK 21** or later
 - **Git** — For diff detection
 
-## Limitations (v0.3)
+## Limitations
 
 - Module discovery is convention-based: it parses `settings.gradle(.kts)` includes,
   enumerates `src/<sourceSet>/{kotlin,java}` layouts, and reads `project(":x")` /
