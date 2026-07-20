@@ -8,6 +8,12 @@
 # then pass /workspace as project_path in the tool call.
 FROM eclipse-temurin:21-jre
 
+# Ownership verification for the official MCP Registry
+LABEL io.modelcontextprotocol.server.name="io.github.mikhailhal/ariadne"
+LABEL org.opencontainers.image.source="https://github.com/MikhailHal/ariadne"
+LABEL org.opencontainers.image.description="MCP server for Kotlin affected-test selection"
+LABEL org.opencontainers.image.licenses="Apache-2.0"
+
 # ariadne shells out to git diff against the analyzed project
 RUN apt-get update \
     && apt-get install -y --no-install-recommends git \
