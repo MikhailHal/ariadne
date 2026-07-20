@@ -1,0 +1,21 @@
+{
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.MikhailHal/ariadne",
+  "title": "ariadne",
+  "description": "Returns only the unit tests affected by your current Kotlin/Android code changes.",
+  "repository": {
+    "url": "https://github.com/MikhailHal/ariadne",
+    "source": "github"
+  },
+  "websiteUrl": "https://github.com/MikhailHal/ariadne",
+  "version": "0.3.1",
+  "packages": [
+    {
+      "registryType": "oci",
+      "identifier": "ghcr.io/mikhailhal/ariadne:0.3.1",
+      "transport": {
+        "type": "stdio"
+      }
+    }
+  ]
+}
