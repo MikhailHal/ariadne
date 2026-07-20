@@ -148,8 +148,7 @@ com.example.UserRepositoryTest.testSave
 ## Real-World Validation: Now in Android
 
 Measured against [Now in Android](https://github.com/android/nowinandroid)
-(Google's reference Android app — 34 modules, ~268 Kotlin files) with ariadne 0.3.0
-(2026-07):
+(Google's reference Android app — 34 modules, ~268 Kotlin files):
 
 | Metric | Result |
 |---|---|
