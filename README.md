@@ -9,7 +9,7 @@
   </p>
   <p align="center">
     <a href="https://github.com/MikhailHal/ariadne/releases"><img src="https://img.shields.io/github/v/release/MikhailHal/ariadne?style=flat-square&color=success" alt="Release"></a>
-    <a href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.MikhailHal/ariadne"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0%2Fservers%3Fsearch%3Dio.github.MikhailHal%2Fariadne&query=%24.servers%5B0%5D.server.version&label=MCP%20Registry&prefix=v&style=flat-square&color=6E56CF" alt="MCP Registry"></a>
+    <a href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.MikhailHal/ariadne"><img src="https://img.shields.io/badge/MCP%20Registry-listed-6E56CF.svg?style=flat-square" alt="MCP Registry"></a>
     <a href="https://github.com/MikhailHal/homebrew-tap"><img src="https://img.shields.io/badge/homebrew-mikhailhal%2Ftap-FBB040.svg?style=flat-square&logo=homebrew&logoColor=white" alt="Homebrew"></a>
     <a href="https://github.com/MikhailHal/ariadne/pkgs/container/ariadne"><img src="https://img.shields.io/badge/ghcr.io-ariadne-2496ED.svg?style=flat-square&logo=docker&logoColor=white" alt="Container image"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
