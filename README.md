@@ -157,20 +157,41 @@ and callable references. Two representative results:
 - Changing the mapper `PopulatedNewsResource.asExternalModel()` selects **14 tests**,
   including 11 repository tests reachable only through `.map(Type::mapper)` chains
 
+### Test-class selection rate
+
+Every unit-test class in Now in Android was measured by changing a function in the
+class it tests and checking whether that test class was selected:
+
+| Test style | Selected |
+|---|---|
+| Plain unit tests (construct the object, call it) | 13 / 13 valid targets |
+| Robolectric / Compose screenshot tests | **12 / 12** |
+| Framework-dispatched callbacks (lint `Detector`) | 0 / 2 — see below |
+
+Robolectric turned out **not** to be a barrier: those tests call the composable
+themselves (`setContent { NiaTheme { ... } }`), so the call exists in the source.
+What decides coverage is not the test runner but whether the test's own code
+contains the call.
+
 ### What ariadne cannot see
 
-These are limits of static analysis, not bugs — plan your CI safety net around them:
+The rule of thumb: **if the framework calls your code instead of your test calling
+it, ariadne cannot connect them.** These are limits of static analysis, not bugs —
+plan your CI safety net around them:
 
 | Pattern | Status |
 |---|---|
+| Framework-invoked callbacks — Fragment/Activity lifecycle (`launchFragmentInContainer`), lint `Detector` methods, `Application.onCreate` | Not traced: no call written in the test |
 | Reflection / DI-container wiring | Not traced |
-| Data-flow indirection (Flux/MVI `dispatch` → reducer) | Not traced as a call edge; conservative coverage via constructor chains only when the collector is wired in `init` ([sazanami#38](https://github.com/MikhailHal/sazanami/issues/38)) |
+| UDF dispatch (Flux/MVI) | `dispatch → collect` is never an edge, but wiring in `init` (or a `start()` the test calls) is covered conservatively via constructor chains. Subscriptions started by DI/lifecycle are **not** covered ([sazanami#38](https://github.com/MikhailHal/sazanami/issues/38)) |
+| `stateIn` / `shareIn` chains (`map`, `onEach`, `flatMapLatest`, `combine`) | Covered — verified with exact selection |
 | Instrumented tests (`androidTest*`) | Out of scope by design |
 | Build scripts, resources, unscanned source sets | Not analyzed — reported explicitly in the tool response |
 | Same-name top-level extensions in one package | Over-selected (receiver types are not part of top-level FQNs) — safe direction |
 | KMP source sets (`commonMain`, `expect`/`actual`) | Enumerated, but resolution quality unverified ([#1](https://github.com/MikhailHal/ariadne/issues/1)) |
 
-Full audit notes: [sazanami#29](https://github.com/MikhailHal/sazanami/issues/29).
+Full audit notes: [sazanami#29](https://github.com/MikhailHal/sazanami/issues/29),
+[sazanami#38](https://github.com/MikhailHal/sazanami/issues/38).
 
 ## Requirements
 
