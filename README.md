@@ -9,7 +9,9 @@
   </p>
   <p align="center">
     <a href="https://github.com/MikhailHal/ariadne/releases"><img src="https://img.shields.io/github/v/release/MikhailHal/ariadne?style=flat-square&color=success" alt="Release"></a>
+    <a href="https://registry.modelcontextprotocol.io/v0/servers?search=io.github.MikhailHal/ariadne"><img src="https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Fregistry.modelcontextprotocol.io%2Fv0%2Fservers%3Fsearch%3Dio.github.MikhailHal%2Fariadne&query=%24.servers%5B0%5D.server.version&label=MCP%20Registry&prefix=v&style=flat-square&color=6E56CF" alt="MCP Registry"></a>
     <a href="https://github.com/MikhailHal/homebrew-tap"><img src="https://img.shields.io/badge/homebrew-mikhailhal%2Ftap-FBB040.svg?style=flat-square&logo=homebrew&logoColor=white" alt="Homebrew"></a>
+    <a href="https://github.com/MikhailHal/ariadne/pkgs/container/ariadne"><img src="https://img.shields.io/badge/ghcr.io-ariadne-2496ED.svg?style=flat-square&logo=docker&logoColor=white" alt="Container image"></a>
     <a href="LICENSE"><img src="https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=flat-square" alt="License"></a>
     <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.3.0-7F52FF.svg?style=flat-square&logo=kotlin&logoColor=white" alt="Kotlin"></a>
   </p>
@@ -67,6 +69,15 @@ Or add to your MCP client configuration manually (e.g., Claude Desktop):
   }
 }
 ```
+
+### Docker
+
+```bash
+docker run -i --rm -v /path/to/project:/workspace ghcr.io/mikhailhal/ariadne
+```
+
+Mount the project you want analyzed and pass `/workspace` as `project_path`.
+The image is also listed in the [official MCP Registry](https://registry.modelcontextprotocol.io/v0/servers?search=io.github.MikhailHal/ariadne) as `io.github.MikhailHal/ariadne`.
 
 ### Manual (release JAR)
 
