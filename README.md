@@ -137,39 +137,55 @@ com.example.UserRepositoryTest.testSave
 ## Real-World Validation: Now in Android
 
 Measured against [Now in Android](https://github.com/android/nowinandroid)
-(Google's reference Android app — 34 modules, ~250 Kotlin files), with sazanami's
-property/constructor-aware call graph (2026-07):
+(Google's reference Android app — 34 modules, ~268 Kotlin files) with ariadne 0.2.0
+(2026-07):
 
 | Metric | Result |
 |---|---|
 | Recall audit — 19 target functions across all layers | **18/18 valid targets detected** (the 19th had no exercising unit test; correctly not selected) |
 | End-to-end response time | **~4s** (module discovery + call-graph build + BFS) |
 | Module discovery | 34 modules via `settings.gradle.kts`, incl. nested modules and type-safe accessor dependencies |
+| Source sets | `main`, `debug`, `prod`, `benchmark`, `testDemo`, … discovered per module (`androidTest*` excluded by design) |
 
 Verified patterns include repositories behind project interfaces, a library-interface
 override (`androidx.datastore.Serializer`), `operator fun invoke` use cases,
-`@Composable` functions, extension mappers, and ViewModel property-initializer
-chains — e.g., changing a single `core:common` function (`asResult()`) correctly
-selects 14 tests across three modules, including ViewModel tests reachable only
-through `val uiState = ...stateIn(...)` properties.
+`@Composable` functions, extension mappers, ViewModel property-initializer chains,
+and callable references. Two representative results:
 
-Known gap: callable references (`::fn`) do not yet produce call-graph edges
-([sazanami#37](https://github.com/MikhailHal/sazanami/issues/37)). Full audit
-notes: [sazanami#29](https://github.com/MikhailHal/sazanami/issues/29).
+- Changing `core:common`'s `asResult()` selects **14 tests across three modules**,
+  including ViewModel tests reachable only through `val uiState = ...stateIn(...)`
+- Changing the mapper `PopulatedNewsResource.asExternalModel()` selects **14 tests**,
+  including 11 repository tests reachable only through `.map(Type::mapper)` chains
+
+### What ariadne cannot see
+
+These are limits of static analysis, not bugs — plan your CI safety net around them:
+
+| Pattern | Status |
+|---|---|
+| Reflection / DI-container wiring | Not traced |
+| Data-flow indirection (Flux/MVI `dispatch` → reducer) | Not traced as a call edge; conservative coverage via constructor chains only when the collector is wired in `init` ([sazanami#38](https://github.com/MikhailHal/sazanami/issues/38)) |
+| Instrumented tests (`androidTest*`) | Out of scope by design |
+| Build scripts, resources, unscanned source sets | Not analyzed — reported explicitly in the tool response |
+| Same-name top-level extensions in one package | Over-selected (receiver types are not part of top-level FQNs) — safe direction |
+| KMP source sets (`commonMain`, `expect`/`actual`) | Enumerated, but resolution quality unverified ([#1](https://github.com/MikhailHal/ariadne/issues/1)) |
+
+Full audit notes: [sazanami#29](https://github.com/MikhailHal/sazanami/issues/29).
 
 ## Requirements
 
 - **JDK 21** or later
 - **Git** — For diff detection
 
-## Limitations (v0.1)
+## Limitations (v0.2)
 
 - Module discovery is convention-based: it parses `settings.gradle(.kts)` includes,
-  standard `src/{main,test}/{kotlin,java}` layouts, and `project(":x")` /
-  type-safe accessor dependencies from build files. Dynamic includes, custom
-  source sets (Android variants, KMP), and dependencies injected by convention
+  enumerates `src/<sourceSet>/{kotlin,java}` layouts, and reads `project(":x")` /
+  type-safe accessor dependencies from build files. Dynamic includes,
+  `projectDir` remapping, custom `srcDirs`, and dependencies injected by convention
   plugins are not detected — see [#1](https://github.com/MikhailHal/ariadne/issues/1)
-- Full graph rebuild on each request (no caching yet)
+- Full graph rebuild on each request (no caching yet); analysis is capped at 120s
+- See [What ariadne cannot see](#what-ariadne-cannot-see) for analysis-level gaps
 
 ## License
 
