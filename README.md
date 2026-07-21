@@ -21,6 +21,12 @@
 
 **ariadne** is an MCP (Model Context Protocol) server that provides AI agents with the ability to identify affected tests. Powered by [sazanami](https://github.com/MikhailHal/sazanami), it analyzes code changes and returns only the tests that need to be run.
 
+<p align="center">
+  <a href="https://glama.ai/mcp/servers/MikhailHal/ariadne">
+    <img src="https://glama.ai/mcp/servers/MikhailHal/ariadne/badges/card.svg" alt="ariadne MCP server" />
+  </a>
+</p>
+
 > [!IMPORTANT]
 > ## ⚠️ MUST READ: Speed over Completeness
 >
@@ -231,11 +237,3 @@ You may obtain a copy of the License at
 ```
 
 See [LICENSE](LICENSE) for the full text.
-
----
-
-<p align="center">
-  <a href="https://glama.ai/mcp/servers/MikhailHal/ariadne">
-    <img src="https://glama.ai/mcp/servers/MikhailHal/ariadne/badges/card.svg" alt="ariadne MCP server" />
-  </a>
-</p>
