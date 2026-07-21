@@ -231,3 +231,11 @@ You may obtain a copy of the License at
 ```
 
 See [LICENSE](LICENSE) for the full text.
+
+---
+
+<p align="center">
+  <a href="https://glama.ai/mcp/servers/MikhailHal/ariadne">
+    <img src="https://glama.ai/mcp/servers/MikhailHal/ariadne/badges/card.svg" alt="ariadne MCP server" />
+  </a>
+</p>
